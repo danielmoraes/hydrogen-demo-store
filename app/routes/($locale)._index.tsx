@@ -1,13 +1,15 @@
 import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import {Suspense} from 'react';
+import {Suspense, useEffect} from 'react';
 import {Await, useLoaderData} from '@remix-run/react';
 import {AnalyticsPageType} from '@shopify/hydrogen';
+import {Image} from '@shopify/hydrogen-react';
 
 import {ProductSwimlane, FeaturedCollections, Hero} from '~/components';
 import {MEDIA_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import {getHeroPlaceholder} from '~/lib/placeholders';
 import {seoPayload} from '~/lib/seo.server';
 import {routeHeaders} from '~/data/cache';
+import { useHydrated } from 'remix-utils/use-hydrated';
 
 export const headers = routeHeaders;
 
@@ -66,6 +68,20 @@ export async function loader({params, context}: LoaderFunctionArgs) {
   });
 }
 
+const TRANSCEND_BUNDLE_ID = '66a3f604-6974-40c6-8118-38b6e8a4370f';
+
+const TranscendScript = () => {
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = `https://cdn.transcend.io/cm/${TRANSCEND_BUNDLE_ID}/airgap.js`;
+    script.async = true;
+    script.type = 'text/javascript';
+    document.head.appendChild(script);
+  }, []);
+
+  return null;
+};
+
 export default function Homepage() {
   const {
     primaryHero,
@@ -78,11 +94,17 @@ export default function Homepage() {
   // TODO: skeletons vs placeholders
   const skeletons = getHeroPlaceholder([{}, {}, {}]);
 
+  const isHydrated = useHydrated();
+
   return (
     <>
       {primaryHero && (
         <Hero {...primaryHero} height="full" top loading="eager" />
       )}
+
+      {isHydrated ? <TranscendScript /> : null}
+
+      <Image data={{url: undefined}} />
 
       {featuredProducts && (
         <Suspense>
